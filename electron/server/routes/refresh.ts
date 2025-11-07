@@ -6,25 +6,47 @@ const r = Router()
 
 type PR = { price?: number; title?: string }
 
-// ---------- WB ----------
+// ---------- WB (устойчивый) ----------
 function wbExtractNmId(url: string): number | null {
   const m = url.match(/\/catalog\/(\d+)\b/i)
   return m ? Number(m[1]) : null
 }
-async function parseWB(url: string): Promise<PR> {
-  const nm = wbExtractNmId(url)
-  if (!nm) return {}
-  const api = `https://card.wb.ru/cards/v2/detail?nm=${nm}`
-  const { body, statusCode } = await request(api, {
+
+async function wbCall(url: string) {
+  const { body, statusCode } = await request(url, {
     headers: {
-      'User-Agent': 'Mozilla/5.0 PriceMonitor/1.0',
+      // обычный браузерный юзер-агент, чтобы не резали
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36',
       'Accept': 'application/json'
     }
   })
-  if (statusCode !== 200) return {}
-  const json = await body.json()
-  const p = json?.data?.products?.[0]
+  if (statusCode !== 200) return null
+  try { return await body.json() } catch { return null }
+}
+
+async function parseWB(url: string): Promise<PR> {
+  const nm = wbExtractNmId(url)
+  if (!nm) return {}
+
+  // 1) v2 без параметров — иногда работает
+  let j = await wbCall(`https://card.wb.ru/cards/v2/detail?nm=${nm}`)
+  let p = j?.data?.products?.[0]
+
+  // 2) v1 с appType/dest — чаще всего стабильно
+  if (!p) {
+    j = await wbCall(`https://card.wb.ru/cards/v1/detail?appType=1&curr=rub&dest=-1257786&nm=${nm}`)
+    p = j?.data?.products?.[0]
+  }
+
+  // 3) v4 с regions/spp — как резерв
+  if (!p) {
+    j = await wbCall(`https://card.wb.ru/cards/v4/detail?appType=1&curr=rub&dest=-1257786&regions=80,64,38,4,115,83,33,68,70,82,69,86,75,30,71,40,1,66,31,48,22,114&spp=0&nm=${nm}`)
+    p = j?.data?.products?.[0]
+  }
+
   if (!p) return {}
+
+  // приоритетная цена: salePriceU (со скидкой), иначе priceU — делим на 100
   const priceU = Number(p.salePriceU ?? p.priceU)
   const price = Number.isFinite(priceU) ? Math.round(priceU) / 100 : undefined
   const title = p?.name ? String(p.name) : undefined
