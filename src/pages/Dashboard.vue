@@ -104,15 +104,15 @@ const vResizableCol = {
           <div class="card-body p-0">
             <table class="table table-striped table-bordered table-sm m-0">
               <thead class="table-light">
-                <tr>
+               <tr>
                   <th style="width:60px">№</th>
-                  <th style="min-width:200px">Моё название</th>
-                  <th>Название товара</th>
-                  <th style="width:150px">Текущая цена</th>
-                  <th style="width:170px">Кол-во в упаковке</th>
-                  <th style="width:160px">Цена за единицу</th>
-                  <th style="width:160px">Маркетплейс</th>
-                </tr>
+                  <th v-resizable-col="'custom_name'" style="min-width:200px">Моё название</th>
+                  <th v-resizable-col="'title'">Название товара</th>
+                  <th v-resizable-col="'current_price'" style="width:150px">Текущая цена</th>
+                  <th v-resizable-col="'pack_qty'" style="width:170px">Кол-во в упаковке</th>
+                  <th v-resizable-col="'price_per_unit'" style="width:160px">Цена за единицу</th>
+                  <th v-resizable-col="'marketplace'" style="width:160px">Маркетплейс</th>
+              </tr>
               </thead>
               <tbody>
                 <tr v-if="(itemsByGroup[g.id] || []).length === 0">
