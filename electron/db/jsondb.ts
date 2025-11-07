@@ -54,7 +54,7 @@ function persist() {
   writeFileSync(DB_PATH, JSON.stringify(state, null, 2), 'utf8')
 }
 
-// ====== GROUPS ======
+// ===== GROUPS =====
 export function listGroups(): Group[] {
   return [...state.groups].sort((a, b) => b.id - a.id)
 }
@@ -65,7 +65,7 @@ export function createGroup(name: string): Group {
   return g
 }
 
-// ====== ITEMS (заглушки, пригодятся дальше) ======
+// ===== ITEMS (на будущее) =====
 export function listItemsByGroup(groupId: number): Item[] {
   return state.items.filter(i => i.group_id === groupId)
 }
