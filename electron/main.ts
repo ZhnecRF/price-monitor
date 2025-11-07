@@ -4,8 +4,8 @@ import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 
 // ▼ добавили
-import { migrate } from '../db/sqlite'
-import { startServer } from '../server'
+import { migrate } from './db/sqlite'
+import { startServer } from './server'
 
 const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
