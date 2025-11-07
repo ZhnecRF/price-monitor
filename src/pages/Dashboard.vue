@@ -6,11 +6,12 @@ const refreshing = ref(false)
 async function refreshAll() {
   try {
     refreshing.value = true
-    // Проверка связи с бэком — пока просто дергаем health:
-    await fetch('http://localhost:18333/api/health')
-    // позже заменим на POST /api/refresh
-  } catch (e) {
-    alert('Бэкенд недоступен: ' + e)
+    // пока просто пингуем бэкенд (кнопка должна быть видна и нажиматься)
+    const r = await fetch('http://localhost:18333/api/health')
+    if (!r.ok) throw new Error('Backend health failed')
+    // позже поменяем на POST /api/refresh
+  } catch (e:any) {
+    alert('Бэкенд недоступен: ' + (e?.message || e))
   } finally {
     refreshing.value = false
   }
@@ -25,8 +26,9 @@ async function refreshAll() {
     </button>
   </div>
 
-  <!-- В дальнейшем здесь будут карточки групп -->
-  <div class="alert alert-secondary">
-    Каркас готов. Далее добавим карточки групп и таблицы.
+  <div class="card">
+    <div class="card-body">
+      Каркас готов. Далее добавим карточки групп и таблицы.
+    </div>
   </div>
 </template>
