@@ -7,6 +7,21 @@ import path from 'node:path'
 import { migrate } from './db/sqlite'
 import { startServer } from './server'
 
+// ▼ ШИМЫ ДЛЯ CJS-ГЛОБАЛОВ (важно в ESM):
+const __FILENAME__ = fileURLToPath(import.meta.url)
+const __DIRNAME__ = path.dirname(__FILENAME__)
+// делаем доступными как «обычные» __filename/__dirname для либ, которые их ожидают
+;(global as any).__filename = __FILENAME__
+;(global as any).__dirname = __DIRNAME__
+
+// на всякий случай логируем необработанные промисы:
+process.on('unhandledRejection', (err) => {
+  console.error('❌ UnhandledRejection:', err)
+})
+process.on('uncaughtException', (err) => {
+  console.error('❌ UncaughtException:', err)
+})
+
 const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
