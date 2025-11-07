@@ -76,8 +76,7 @@ app.on('activate', () => {
 app.whenReady().then(async () => {
   try {
     console.log('📁 Инициализация JSON-БД…')
-initDb()
-
+    initDb()
 
     console.log('🌐 Запуск сервера…')
     const { port } = await startServer()
@@ -88,3 +87,4 @@ initDb()
 
   createWindow()
 })
+
