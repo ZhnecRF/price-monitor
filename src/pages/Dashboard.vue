@@ -97,16 +97,20 @@ async function loadGroups(){
   } catch(e:any){ errorMsg.value = 'Не удалось загрузить данные: '+(e?.message||e) }
   finally{ loading.value=false }
 }
-async function refreshAll(){ try{ refreshing.value=true; await fetch('http://localhost:18333/api/health'); await loadGroups() } finally{ refreshing.value=false } }
-async function updateItemField(item: Item, patch: Partial<Item>){
-  savingCell.value=item.id
-  try{
-    const res = await fetch(`http://localhost:18333/api/items/${item.id}`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify(patch) })
-    if(!res.ok) throw new Error(`HTTP ${res.status}`)
-    const updated = await res.json()
-    const arr = itemsByGroup.value[item.group_id] || []; const idx = arr.findIndex(i=>i.id===item.id); if(idx>=0) arr[idx]=updated
-  } catch(e:any){ alert('Не удалось сохранить: '+(e?.message||e)) }
-  finally{ savingCell.value=null }
+async function refreshAll() {
+  try {
+    refreshing.value = true
+    // запускаем обновление на бэке
+    await fetch('http://localhost:18333/api/refresh', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({}) // можно передать { group_id: g.id } для отдельной карточки
+    })
+    // потом подтягиваем свежие данные
+    await loadGroups()
+  } finally {
+    refreshing.value = false
+  }
 }
 
 onMounted(loadGroups)
