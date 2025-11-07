@@ -2,6 +2,7 @@ import express from 'express'
 import http from 'http'
 import cors from 'cors'
 import { Server } from 'socket.io'
+import itemsRoute from './routes/items'
 
 // ▼ добавь:
 import groupsRoute from './routes/groups'
@@ -10,6 +11,7 @@ export let io: Server
 
 export async function startServer() {
   const app = express()
+  app.use('/api/items', itemsRoute)
   app.use(cors())
   app.use(express.json({ limit: '2mb' }))
 
