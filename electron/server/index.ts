@@ -6,6 +6,8 @@ import itemsRoute from './routes/items'
 
 // ▼ добавь:
 import groupsRoute from './routes/groups'
+import refreshRoute from './routes/refresh'
+
 
 export let io: Server
 
@@ -17,6 +19,7 @@ export async function startServer() {
   app.get('/api/health', (_req, res) => res.json({ ok: true, ts: Date.now() }))
   app.use('/api/groups', groupsRoute)
   app.use('/api/items', itemsRoute)
+  app.use('/api/refresh', refreshRoute)
 
   const server = http.createServer(app)
   io = new Server(server, { cors: { origin: '*' } })
