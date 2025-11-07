@@ -1,14 +1,20 @@
 import { createApp } from 'vue'
-import './style.css'
 import App from './App.vue'
 import { router } from './router'
 
 import 'bootstrap/dist/css/bootstrap.min.css'
 import 'bootstrap'
+import './style.css'
 
-createApp(App).mount('#app').$nextTick(() => {
-  // Use contextBridge
-  window.ipcRenderer.on('main-process-message', (_event, message) => {
-    console.log(message)
-  })
+const app = createApp(App)
+
+// подключаем роутер — это делает <router-link> кликабельными
+app.use(router)
+
+app.mount('#app')
+
+// (необязательно) если нужен ipcRenderer — оставим безопасно
+// @ts-expect-error — типы для окна Electron могут отсутствовать
+window?.ipcRenderer?.on?.('main-process-message', (_event: any, message: any) => {
+  console.log(message)
 })
