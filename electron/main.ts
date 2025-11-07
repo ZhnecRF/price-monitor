@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 
 // ▼ добавили
-import { migrate } from './db/sqlite'
+import { initDb } from './db/jsondb'
 import { startServer } from './server'
 
 // ▼ ШИМЫ ДЛЯ CJS-ГЛОБАЛОВ (важно в ESM):
@@ -75,8 +75,9 @@ app.on('activate', () => {
 // ▼ ВАЖНО: запускаем миграции и сервер ПЕРЕД созданием окна
 app.whenReady().then(async () => {
   try {
-    console.log('🚀 Инициализация БД…')
-    migrate()
+    console.log('📁 Инициализация JSON-БД…')
+initDb()
+
 
     console.log('🌐 Запуск сервера…')
     const { port } = await startServer()
