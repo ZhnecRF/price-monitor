@@ -1,82 +1,75 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+/* ... твой текущий код выше ... */
 
-type Group = { id: number; name: string; created_at: string }
-type Item = {
-  id: number
-  group_id: number
-  url: string
-  marketplace?: string
-  title?: string
-  custom_name?: string
-  pack_qty?: number
-  current_price?: number
-  price_per_unit?: number
-  updated_at?: string
+import { onBeforeUnmount } from 'vue'
+
+// ── Директива: v-resizable-col ───────────────────────────────
+// Делает <th> перетягиваемым. Ключ сохраняем в localStorage.
+const colWidths = ref<Record<string, number>>(
+  JSON.parse(localStorage.getItem('pm_col_widths') || '{}')
+)
+
+function saveWidths() {
+  localStorage.setItem('pm_col_widths', JSON.stringify(colWidths.value))
 }
 
-const refreshing = ref(false)
-const loading = ref(true)
-const groups = ref<Group[]>([])
-const itemsByGroup = ref<Record<number, Item[]>>({})
-const errorMsg = ref<string | null>(null)
-const savingCell = ref<number | null>(null) // id товара, который сейчас сохраняем
+function makeResizable(el: HTMLElement, key: string, min = 80, max = 600) {
+  // применим сохранённую ширину, если есть
+  const saved = colWidths.value[key]
+  if (saved) {
+    el.style.width = saved + 'px'
+  }
 
-async function loadGroups() {
-  errorMsg.value = null
-  loading.value = true
-  try {
-    const r = await fetch('http://localhost:18333/api/groups')
-    if (!r.ok) throw new Error(`HTTP ${r.status}`)
-    groups.value = await r.json()
+  const handle = document.createElement('span')
+  handle.style.cssText = `
+    position:absolute; right:0; top:0; width:6px; height:100%;
+    cursor:col-resize; user-select:none;
+  `
+  el.style.position = 'relative'
+  el.appendChild(handle)
 
-    // подтянем товары для каждой группы
-    const map: Record<number, Item[]> = {}
-    for (const g of groups.value) {
-      const rr = await fetch(`http://localhost:18333/api/items?group_id=${g.id}`)
-      map[g.id] = rr.ok ? await rr.json() : []
-    }
-    itemsByGroup.value = map
-  } catch (e:any) {
-    errorMsg.value = 'Не удалось загрузить данные: ' + (e?.message || e)
-  } finally {
-    loading.value = false
+  let startX = 0
+  let startW = 0
+  const onMove = (e: MouseEvent) => {
+    const dx = e.clientX - startX
+    let w = Math.max(min, Math.min(max, startW + dx))
+    el.style.width = w + 'px'
+    colWidths.value[key] = w
+  }
+  const onUp = () => {
+    document.removeEventListener('mousemove', onMove)
+    document.removeEventListener('mouseup', onUp)
+    saveWidths()
+  }
+  const onDown = (e: MouseEvent) => {
+    startX = e.clientX
+    startW = el.getBoundingClientRect().width
+    document.addEventListener('mousemove', onMove)
+    document.addEventListener('mouseup', onUp)
+  }
+  handle.addEventListener('mousedown', onDown)
+
+  return () => {
+    handle.removeEventListener('mousedown', onDown)
+    handle.remove()
   }
 }
 
-async function refreshAll() {
-  try {
-    refreshing.value = true
-    await fetch('http://localhost:18333/api/health')
-    await loadGroups()
-  } finally {
-    refreshing.value = false
+const vResizableCol = {
+  mounted(el: HTMLElement, binding: any) {
+    const key = String(binding.value || '')
+    (el as any).__cleanup = makeResizable(el, key)
+  },
+  unmounted(el: HTMLElement) {
+    const fn = (el as any).__cleanup
+    if (fn) fn()
   }
 }
+// ─────────────────────────────────────────────────────────────
 
-async function updateItemField(item: Item, patch: Partial<Item>) {
-  savingCell.value = item.id
-  try {
-    const res = await fetch(`http://localhost:18333/api/items/${item.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(patch)
-    })
-    if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    const updated = await res.json()
-    // обновим локально
-    const arr = itemsByGroup.value[item.group_id] || []
-    const idx = arr.findIndex(i => i.id === item.id)
-    if (idx >= 0) arr[idx] = updated
-  } catch (e) {
-    alert('Не удалось сохранить: ' + (e as any)?.message)
-  } finally {
-    savingCell.value = null
-  }
-}
-
-onMounted(loadGroups)
+/* ... остальной твой код ниже ... */
 </script>
+
 
 <template>
   <div class="d-flex justify-content-between align-items-center mb-3">
